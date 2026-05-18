@@ -1,0 +1,6 @@
+{
+  "name": "InventoryFlow",
+  "description": "A modern, professional inventory management system with real-time dashboard analytics, sales history, supplier management, and automated profit calculations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

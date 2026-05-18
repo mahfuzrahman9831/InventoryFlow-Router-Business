@@ -1,0 +1,154 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net - Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Entity Validations ---
+    function isValidProduct(data) {
+      return (!data.keys().hasAny(['name']) || (data.name is string && data.name.size() <= 200)) &&
+             (!data.keys().hasAny(['purchasePrice']) || (data.purchasePrice is number && data.purchasePrice >= 0)) &&
+             (!data.keys().hasAny(['sellingPrice']) || (data.sellingPrice is number && data.sellingPrice >= 0)) &&
+             (!data.keys().hasAny(['stockQuantity']) || (data.stockQuantity is number)) &&
+             (!data.keys().hasAny(['batches']) || (data.batches is list));
+    }
+
+    function isValidSupplier(data) {
+      return (!data.keys().hasAny(['name']) || (data.name is string && data.name.size() <= 200));
+    }
+
+    function isValidSale(data) {
+      return (!data.keys().hasAny(['date']) || (data.date is string)) &&
+             (!data.keys().hasAny(['totalAmount']) || (data.totalAmount is number && data.totalAmount >= 0)) &&
+             (!data.keys().hasAny(['items']) || (data.items is list)) &&
+             (!data.keys().hasAny(['customerId']) || isValidId(data.customerId)) &&
+             (!data.keys().hasAny(['customerName']) || data.customerName is string) &&
+             (!data.keys().hasAny(['profit']) || data.profit is number);
+    }
+
+    function isValidCustomer(data) {
+      return (!data.keys().hasAny(['name']) || (data.name is string && data.name.size() <= 200)) &&
+             (!data.keys().hasAny(['dueAmount']) || data.dueAmount is number);
+    }
+
+    function isValidPayment(data) {
+      return (!data.keys().hasAny(['customerId']) || (isValidId(data.customerId))) &&
+             (!data.keys().hasAny(['amount']) || (data.amount is number && data.amount >= 0)) &&
+             (!data.keys().hasAny(['date']) || (data.date is string));
+    }
+
+    function isValidPurchase(data) {
+      return (!data.keys().hasAny(['date']) || (data.date is string)) &&
+             (!data.keys().hasAny(['totalAmount']) || (data.totalAmount is number && data.totalAmount >= 0)) &&
+             (!data.keys().hasAny(['items']) || (data.items is list));
+    }
+
+    function isValidSetting(data) {
+      return (!data.keys().hasAny(['shopName']) || (data.shopName is string && data.shopName.size() <= 100));
+    }
+
+    function isValidSupplierPayment(data) {
+      return (!data.keys().hasAny(['supplierId']) || (isValidId(data.supplierId))) &&
+             (!data.keys().hasAny(['amount']) || (data.amount is number && data.amount >= 0)) &&
+             (!data.keys().hasAny(['date']) || (data.date is string));
+    }
+
+    function isValidExpense(data) {
+      return (!data.keys().hasAny(['category']) || (data.category is string)) &&
+             (!data.keys().hasAny(['amount']) || (data.amount is number && data.amount >= 0)) &&
+             (!data.keys().hasAny(['date']) || (data.date is string));
+    }
+
+    // --- Collection Routes ---
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /products/{productId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && incoming().keys().hasAll(['name', 'purchasePrice', 'sellingPrice', 'stockQuantity']) && isValidProduct(incoming());
+        allow update: if isOwner(userId) && isValidProduct(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      match /suppliers/{supplierId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && incoming().keys().hasAll(['name']) && isValidSupplier(incoming());
+        allow update: if isOwner(userId) && isValidSupplier(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      match /sales/{saleId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && incoming().keys().hasAll(['date', 'totalAmount', 'items']) && isValidSale(incoming());
+        allow update: if isOwner(userId) && isValidSale(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      match /customers/{customerId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && incoming().keys().hasAll(['name']) && isValidCustomer(incoming());
+        allow update: if isOwner(userId) && isValidCustomer(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      match /payments/{paymentId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && incoming().keys().hasAll(['customerId', 'amount', 'date']) && isValidPayment(incoming());
+        allow update: if isOwner(userId) && isValidPayment(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      match /purchases/{purchaseId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && incoming().keys().hasAll(['date', 'totalAmount', 'items']) && isValidPurchase(incoming());
+        allow update: if isOwner(userId) && isValidPurchase(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      match /settings/{docId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && incoming().keys().hasAll(['shopName']) && isValidSetting(incoming());
+        allow update: if isOwner(userId) && isValidSetting(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      match /supplierPayments/{paymentId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && incoming().keys().hasAll(['supplierId', 'amount', 'date']) && isValidSupplierPayment(incoming());
+        allow update: if isOwner(userId) && isValidSupplierPayment(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      match /expenses/{expenseId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && incoming().keys().hasAll(['category', 'amount', 'date']) && isValidExpense(incoming());
+        allow update: if isOwner(userId) && isValidExpense(incoming());
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

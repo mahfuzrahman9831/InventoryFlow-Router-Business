@@ -1,0 +1,195 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Inventory product item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "purchasePrice": { "type": "number" },
+        "sellingPrice": { "type": "number" },
+        "stockQuantity": { "type": "number" },
+        "supplierId": { "type": "string" },
+        "minStock": { "type": "number" },
+        "unit": { "type": "string" }
+      },
+      "required": ["name", "purchasePrice", "sellingPrice", "stockQuantity"]
+    },
+    "Supplier": {
+      "title": "Supplier",
+      "description": "Product supplier",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "dueAmount": { "type": "number" }
+      },
+      "required": ["name"]
+    },
+    "Sale": {
+      "title": "Sale",
+      "description": "Sales transaction record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "receivedAmount": { "type": "number" },
+        "dueAmount": { "type": "number" },
+        "profit": { "type": "number" },
+        "isHistorical": { "type": "boolean" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": { "type": "string" },
+              "quantity": { "type": "number" },
+              "price": { "type": "number" }
+            }
+          }
+        }
+      },
+      "required": ["date", "totalAmount", "items"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Client or customer record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "dueAmount": { "type": "number" }
+      },
+      "required": ["name"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Customer payment for due settlement",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerId": { "type": "string" },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" },
+        "previousDue": { "type": "number" },
+        "newDue": { "type": "number" }
+      },
+      "required": ["customerId", "amount", "date"]
+    },
+    "Purchase": {
+      "title": "Purchase",
+      "description": "Stock purchase from supplier",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "supplierId": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "paidAmount": { "type": "number" },
+        "dueAmount": { "type": "number" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": { "type": "string" },
+              "name": { "type": "string" },
+              "category": { "type": "string" },
+              "quantity": { "type": "number" },
+              "purchasePrice": { "type": "number" }
+            }
+          }
+        }
+      },
+      "required": ["date", "totalAmount", "items"]
+    },
+    "Setting": {
+      "title": "Setting",
+      "description": "User shop settings",
+      "type": "object",
+      "properties": {
+        "shopName": { "type": "string" },
+        "ownerName": { "type": "string" },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" }
+      }
+    },
+    "SupplierPayment": {
+      "title": "SupplierPayment",
+      "description": "Payment made to supplier",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "supplierId": { "type": "string" },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" },
+        "previousDue": { "type": "number" },
+        "newDue": { "type": "number" },
+        "note": { "type": "string" },
+        "memoImage": { "type": "string" }
+      },
+      "required": ["supplierId", "amount", "date"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Business expenses like carrying costs",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "category": { "type": "string" },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" },
+        "note": { "type": "string" }
+      },
+      "required": ["category", "amount", "date"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/products/{productId}": {
+      "schema": "Product",
+      "description": "User's product inventory"
+    },
+    "/users/{userId}/suppliers/{supplierId}": {
+      "schema": "Supplier",
+      "description": "User's suppliers"
+    },
+    "/users/{userId}/sales/{saleId}": {
+      "schema": "Sale",
+      "description": "User's sales transactions"
+    },
+    "/users/{userId}/customers/{customerId}": {
+      "schema": "Customer",
+      "description": "User's customers"
+    },
+    "/users/{userId}/payments/{paymentId}": {
+      "schema": "Payment",
+      "description": "Customer payment history"
+    },
+    "/users/{userId}/purchases/{purchaseId}": {
+      "schema": "Purchase",
+      "description": "Stock purchase history"
+    },
+    "/users/{userId}/settings/current": {
+      "schema": "Setting",
+      "description": "User's shop settings"
+    },
+    "/users/{userId}/supplierPayments/{paymentId}": {
+      "schema": "SupplierPayment",
+      "description": "Supplier payment history"
+    },
+    "/users/{userId}/expenses/{expenseId}": {
+      "schema": "Expense",
+      "description": "Business expenses"
+    }
+  }
+}
