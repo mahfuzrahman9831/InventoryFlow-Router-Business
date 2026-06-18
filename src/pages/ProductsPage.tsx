@@ -430,11 +430,11 @@ export const ProductsPage = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Stock Quantity</label>
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Stock Quantity (Optional)</label>
                   <input 
-                    required
                     type="number" 
                     className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    placeholder="0"
                     value={formData.stockQuantity === 0 ? '' : (formData.stockQuantity || '')}
                     onFocus={e => e.target.select()}
                     onWheel={(e) => e.currentTarget.blur()}
@@ -442,11 +442,11 @@ export const ProductsPage = () => {
                   />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Purchase Price</label>
+                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Purchase Price (Optional)</label>
                     <input 
-                      required
                       type="number" 
                       className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      placeholder="0"
                       value={formData.purchasePrice === 0 ? '' : (formData.purchasePrice || '')}
                       onFocus={e => e.target.select()}
                       onWheel={(e) => e.currentTarget.blur()}

@@ -129,9 +129,14 @@ export const Dashboard = () => {
         return sDate === todayStr;
       });
 
-      const totalSalesProfit = allSales
-        .filter((s: any) => new Date(s.date) >= PROFIT_START_DATE)
-        .reduce((acc, s: any) => acc + (Number(s.profit || 0)), 0);
+      // Calculate current month's sales profit
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const currentMonthSales = allSales.filter((s: any) => {
+        const d = new Date(s.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      });
+      const currentMonthSalesProfit = currentMonthSales.reduce((acc, s: any) => acc + (Number(s.profit || 0)), 0);
 
       const totalValidExpenses = expenses
         .filter((e: any) => new Date(e.date) >= PROFIT_START_DATE)
@@ -149,7 +154,7 @@ export const Dashboard = () => {
         totalDue: customers.reduce((acc, c: any) => acc + (Number(c.dueAmount || 0)), 0),
         cashHand: 0,
         totalExpenses: totalValidExpenses,
-        netProfit: totalSalesProfit - totalValidExpenses,
+        netProfit: currentMonthSalesProfit,
         todaySales: todaySalesItems.reduce((acc, s: any) => acc + (Number(s.totalAmount || 0)), 0),
         todayProfit: todaySalesItems.reduce((acc, s: any) => acc + (Number(s.profit || 0)), 0)
       };
@@ -187,15 +192,8 @@ export const Dashboard = () => {
             return saleDate.getMonth() === index && saleDate >= PROFIT_START_DATE;
           })
           .reduce((acc, s: any) => acc + (Number(s.profit || 0)), 0);
-        
-        const monthExpenses = expenses
-          .filter((e: any) => {
-            const expDate = new Date(e.date);
-            return expDate.getFullYear() === year && expDate.getMonth() === index && expDate >= PROFIT_START_DATE;
-          })
-          .reduce((acc, e: any) => acc + (Number(e.amount || 0)), 0);
 
-        return { name: month, profit: monthProfit - monthExpenses };
+        return { name: month, profit: monthProfit };
       });
 
       const lowStockProducts = products.filter((p: any) => Number(p.stockQuantity) < 5);
@@ -249,7 +247,7 @@ export const Dashboard = () => {
           },
           { label: 'Total Due', val: `৳${data.stats.totalDue.toLocaleString()}`, icon: AlertTriangle, color: 'text-orange-600', trend: 'Outstanding Receivables' },
           { label: 'Expenses', val: `৳${data.stats.totalExpenses.toLocaleString()}`, icon: TrendingUp, color: 'text-red-600', trend: 'Business Costs' },
-          { label: 'Net Profit', val: `৳${data.stats.netProfit.toLocaleString()}`, icon: CheckCircle, color: 'text-green-600', trend: 'After Expenses' },
+          { label: 'Net Profit', val: `৳${data.stats.netProfit.toLocaleString()}`, icon: CheckCircle, color: 'text-green-600', trend: 'Current Month' },
         ].map((stat, i) => (
           <motion.div
             key={i}

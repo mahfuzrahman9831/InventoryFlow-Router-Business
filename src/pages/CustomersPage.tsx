@@ -143,6 +143,30 @@ export const CustomersPage = () => {
         newDue: newDue,
         createdAt: new Date().toISOString()
       });
+
+      // Update matching due sales (FIFO settlement)
+      const salesCol = getCollectionRef(user.uid, 'sales');
+      const qSales = query(salesCol, where('customerId', '==', selectedCustomer.id));
+      const sSnap = await getDocs(qSales);
+      
+      const customerSales = (sSnap.docs.map(doc => ({ ...doc.data() as any, id: doc.id })) as any[])
+        .filter((s: any) => (Number(s.dueAmount) || 0) > 0)
+        .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      
+      let remainingPayment = Number(paymentAmount);
+      for (const sale of customerSales) {
+        if (remainingPayment <= 0) break;
+        const saleDue = Number(sale.dueAmount) || 0;
+        const deduct = Math.min(saleDue, remainingPayment);
+        
+        const saleRef = getDocRef(user.uid, 'sales', sale.id);
+        batch.update(saleRef, {
+          dueAmount: saleDue - deduct,
+          receivedAmount: (Number(sale.receivedAmount) || 0) + deduct
+        });
+        
+        remainingPayment -= deduct;
+      }
       
       await batch.commit();
       await fetchCustomers();

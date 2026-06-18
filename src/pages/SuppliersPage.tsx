@@ -460,14 +460,14 @@ export const SuppliersPage = () => {
                 date: new Date().toISOString()
               };
               
-              const existingBatches = Array.isArray(currentProd.batches) ? currentProd.batches : [
+              const existingBatches = (Array.isArray(currentProd.batches) ? currentProd.batches : [
                 { 
                   price: Number(currentProd.purchasePrice), 
                   purchasePrice: Number(currentProd.purchasePrice),
                   quantity: Number(currentProd.stockQuantity), 
                   date: currentProd.createdAt || new Date().toISOString() 
                 }
-              ];
+              ]).filter((b: any) => (Number(b.quantity) || 0) > 0);
 
               batch.update(productRef, {
                 stockQuantity: (Number(currentProd.stockQuantity) || 0) + Number(item.quantity),

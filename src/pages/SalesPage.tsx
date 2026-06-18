@@ -106,7 +106,6 @@ export const SalesPage = () => {
   const getFilteredBreakdown = () => {
     // Set to local midnight of May 14, 2026 to be safe
     const PROFIT_START_DATE = new Date(2026, 4, 14, 0, 0, 0); 
-    const expenses = (window as any)._allExpenses || [];
     
     if (selectedMonthFilter === "All Time") {
       let total = 0;
@@ -118,11 +117,7 @@ export const SalesPage = () => {
         }
       });
       
-      // Subtract all expenses for Net Profit (only those since PROFIT_START_DATE)
-      const totalExps = expenses
-        .filter((e: any) => new Date(e.date) >= PROFIT_START_DATE)
-        .reduce((acc: number, e: any) => acc + (Number(e.amount) || 0), 0);
-      return [{ name: "All Time", total, profit: profit - totalExps }];
+      return [{ name: "All Time", total, profit: profit }];
     }
 
     const filteredSales = sales.filter(sale => {
@@ -139,17 +134,10 @@ export const SalesPage = () => {
       }
     });
 
-      // Subtract expenses for the specific month (only those since PROFIT_START_DATE)
-      const monthExps = expenses.filter((e: any) => {
-        const d = new Date(e.date);
-        const expMonthYear = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-        return expMonthYear === selectedMonthFilter && d >= PROFIT_START_DATE;
-      }).reduce((acc: number, e: any) => acc + (Number(e.amount) || 0), 0);
-
     return [{ 
       name: selectedMonthFilter, 
       total: monthSalesTotal, 
-      profit: monthSalesProfit - monthExps 
+      profit: monthSalesProfit
     }];
   };
 
@@ -856,7 +844,7 @@ export const SalesPage = () => {
                       <option value="">Select Customer...</option>
                       {customers.map(c => (
                         <option key={c.id} value={c.id}>
-                          {c.name.length > 10 ? c.name.slice(0, 10) + '..' : c.name} — {c.phone.slice(-11)}
+                          {c.name}{c.phone && c.phone !== 'N/A' ? ` — ${c.phone}` : ''}
                         </option>
                       ))}
                     </select>
