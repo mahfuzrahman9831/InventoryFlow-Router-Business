@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
+  BookOpen,
   Package, 
   Users, 
   ShoppingCart, 
@@ -54,6 +55,7 @@ import { SalesPage } from './pages/SalesPage';
 import { SuppliersPage } from './pages/SuppliersPage';
 import { ExpensesPage } from './pages/ExpensesPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { LedgerPage } from './pages/LedgerPage';
 import { useSearchParams, useNavigate, Navigate } from 'react-router-dom';
 
 const AuthActionDispatcher = () => {
@@ -163,17 +165,17 @@ export const Dashboard = () => {
       const [settingsDoc]: any[] = await fetchItems(user.uid, 'settings');
       const lastAdjustment = settingsDoc?.lastCashAdjustment || { amount: 0, date: new Date(0).toISOString() };
       
-      const salesAfterAdj = allSales.filter((s: any) => new Date(s.date) > new Date(lastAdjustment.date));
+      const salesAfterAdj = allSales.filter((s: any) => new Date(s.createdAt || s.date) > new Date(lastAdjustment.date));
       const customerPayments = await fetchItems(user.uid, 'payments');
-      const custPayAfterAdj = customerPayments.filter((p: any) => new Date(p.date) > new Date(lastAdjustment.date));
+      const custPayAfterAdj = customerPayments.filter((p: any) => new Date(p.createdAt || p.date) > new Date(lastAdjustment.date));
       
       const supplierPayments = await fetchItems(user.uid, 'supplierPayments');
-      const suppPayAfterAdj = supplierPayments.filter((p: any) => new Date(p.date) > new Date(lastAdjustment.date));
+      const suppPayAfterAdj = supplierPayments.filter((p: any) => new Date(p.createdAt || p.date) > new Date(lastAdjustment.date));
       
       const purchases = await fetchItems(user.uid, 'purchases');
-      const purchasesAfterAdj = purchases.filter((p: any) => new Date(p.date) > new Date(lastAdjustment.date));
+      const purchasesAfterAdj = purchases.filter((p: any) => new Date(p.createdAt || p.date) > new Date(lastAdjustment.date));
       
-      const expensesAfterAdj = expenses.filter((e: any) => new Date(e.date) > new Date(lastAdjustment.date));
+      const expensesAfterAdj = expenses.filter((e: any) => new Date(e.createdAt || e.date) > new Date(lastAdjustment.date));
 
       const cashIn = salesAfterAdj.reduce((acc, s: any) => acc + (Number(s.receivedAmount || 0)), 0) +
                      custPayAfterAdj.reduce((acc, p: any) => acc + (Number(p.amount || 0)), 0);
@@ -662,6 +664,7 @@ function AppContent() {
         <nav className="flex-1 px-4 space-y-1 mt-6 overflow-y-auto no-scrollbar">
           {[
             { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+            { to: '/ledger', label: 'Cash Book', icon: BookOpen },
             { to: '/products', label: 'Inventory', icon: Package },
             { to: '/suppliers', label: 'Suppliers', icon: Users },
             { to: '/sales', label: 'Sales', icon: ShoppingCart },
@@ -793,6 +796,7 @@ function AppContent() {
              >
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
+                  <Route path="/ledger" element={<LedgerPage />} />
                   <Route path="/products" element={<ProductsPage />} />
                   <Route path="/suppliers" element={<SuppliersPage />} />
                   <Route path="/sales" element={<SalesPage />} />

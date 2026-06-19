@@ -239,127 +239,152 @@ export const ProductsPage = () => {
                   </tr>
                 ))
               ) : filteredProducts.length > 0 ? (
-                filteredProducts.map((product) => (
-                  <React.Fragment key={product.id}>
-                    <tr 
-                      className={cn(
-                        "hover:bg-slate-50/50 transition-colors cursor-pointer",
-                        expandedProduct === product.id && "bg-blue-50/20"
-                      )}
-                      onClick={() => setExpandedProduct(expandedProduct === product.id ? null : product.id)}
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
+                filteredProducts.map((product) => {
+                  const displayBatches = (() => {
+                    if (!product.batches || product.batches.length === 0) return [];
+                    const mergedMap: Record<number, any> = {};
+                    product.batches.forEach((b: any) => {
+                      const price = Number(b.purchasePrice ?? b.price ?? 0);
+                      if (mergedMap[price]) {
+                        mergedMap[price].quantity = (Number(mergedMap[price].quantity) || 0) + (Number(b.quantity) || 0);
+                        if (b.date && new Date(b.date).getTime() < new Date(mergedMap[price].date).getTime()) {
+                          mergedMap[price].date = b.date;
+                        }
+                      } else {
+                        mergedMap[price] = {
+                          ...b,
+                          purchasePrice: price,
+                          price: price,
+                          quantity: Number(b.quantity) || 0,
+                          date: b.date || new Date().toISOString()
+                        };
+                      }
+                    });
+                    return Object.values(mergedMap).sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                  })();
+
+                  return (
+                    <React.Fragment key={product.id}>
+                      <tr 
+                        className={cn(
+                          "hover:bg-slate-50/50 transition-colors cursor-pointer",
+                          expandedProduct === product.id && "bg-blue-50/20"
+                        )}
+                        onClick={() => setExpandedProduct(expandedProduct === product.id ? null : product.id)}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className={cn(
+                              "w-1.5 h-10 rounded-full transition-all",
+                              expandedProduct === product.id ? "bg-blue-600 scale-y-110" : "bg-slate-200"
+                            )} />
+                            <div>
+                              <div className="font-bold text-slate-900">{product.name}</div>
+                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">ID: {product.id.slice(-6)}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-black text-blue-700 uppercase tracking-tighter">
+                            {product.category}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right font-medium">
+                          <div className="text-blue-600 font-black">৳{product.purchasePrice}</div>
+                          {displayBatches.length > 1 && (
+                            <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                              {displayBatches.length} Cost Batches
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-right">
                           <div className={cn(
-                            "w-1.5 h-10 rounded-full transition-all",
-                            expandedProduct === product.id ? "bg-blue-600 scale-y-110" : "bg-slate-200"
-                          )} />
-                          <div>
-                            <div className="font-bold text-slate-900">{product.name}</div>
-                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">ID: {product.id.slice(-6)}</div>
+                            "font-black text-lg leading-none",
+                            product.stockQuantity < 10 ? "text-red-500" : "text-slate-900"
+                          )}>
+                            {product.stockQuantity}
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-black text-blue-700 uppercase tracking-tighter">
-                          {product.category}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right font-medium">
-                        <div className="text-blue-600 font-black">৳{product.purchasePrice}</div>
-                        {product.batches && product.batches.length > 1 && (
-                          <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                            {product.batches.length} Cost Batches
+                          {product.stockQuantity < 10 && (
+                            <div className="text-[9px] font-black text-red-500 uppercase tracking-widest mt-1">Low Stock</div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-center gap-2">
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingProduct(product);
+                                setFormData({ ...product });
+                                setIsModalOpen(true);
+                              }}
+                              className="rounded-md p-2 text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteClick(product.id);
+                              }}
+                              className="rounded-md p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                              title="Delete Product"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className={cn(
-                          "font-black text-lg leading-none",
-                          product.stockQuantity < 10 ? "text-red-500" : "text-slate-900"
-                        )}>
-                          {product.stockQuantity}
-                        </div>
-                        {product.stockQuantity < 10 && (
-                          <div className="text-[9px] font-black text-red-500 uppercase tracking-widest mt-1">Low Stock</div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-center gap-2">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingProduct(product);
-                              setFormData({ ...product });
-                              setIsModalOpen(true);
-                            }}
-                            className="rounded-md p-2 text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        </td>
+                      </tr>
+                      
+                      {/* Batches Expanded View */}
+                      <AnimatePresence>
+                        {expandedProduct === product.id && (
+                          <motion.tr
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="bg-slate-50/50"
                           >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteClick(product.id);
-                            }}
-                            className="rounded-md p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-                            title="Delete Product"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                    
-                    {/* Batches Expanded View */}
-                    <AnimatePresence>
-                      {expandedProduct === product.id && (
-                        <motion.tr
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="bg-slate-50/50"
-                        >
-                          <td colSpan={5} className="px-12 py-6 border-b border-blue-100">
-                             <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Inventory Cost Breakdown (FIFO)</p>
-                                   <div className="h-px flex-1 bg-slate-200 mx-4" />
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                   {product.batches && product.batches.length > 0 ? (
-                                     product.batches.map((batch: any, bi: number) => (
-                                       <div key={bi} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                            <td colSpan={5} className="px-12 py-6 border-b border-blue-100">
+                               <div className="space-y-4">
+                                  <div className="flex items-center justify-between">
+                                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Inventory Cost Breakdown (FIFO)</p>
+                                     <div className="h-px flex-1 bg-slate-200 mx-4" />
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                     {displayBatches.length > 0 ? (
+                                       displayBatches.map((batch: any, bi: number) => (
+                                         <div key={bi} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                                            <div>
+                                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Batch #{bi + 1}</p>
+                                               <p className="text-xs font-bold text-slate-500">{new Date(batch.date || Date.now()).toLocaleDateString()}</p>
+                                            </div>
+                                            <div className="text-right">
+                                               <p className="text-sm font-black text-slate-900">৳{batch.purchasePrice}</p>
+                                               <p className="text-[10px] font-bold text-blue-600">{batch.quantity} units left</p>
+                                            </div>
+                                         </div>
+                                       ))
+                                     ) : (
+                                       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                                           <div>
-                                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Batch #{bi + 1}</p>
-                                             <p className="text-xs font-bold text-slate-500">{new Date(batch.date || Date.now()).toLocaleDateString()}</p>
+                                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Default Batch</p>
+                                             <p className="text-xs font-bold text-slate-500">Legacy Stock</p>
                                           </div>
                                           <div className="text-right">
-                                             <p className="text-sm font-black text-slate-900">৳{batch.purchasePrice}</p>
-                                             <p className="text-[10px] font-bold text-blue-600">{batch.quantity} units left</p>
+                                             <p className="text-sm font-black text-slate-900">৳{product.purchasePrice}</p>
+                                             <p className="text-[10px] font-bold text-blue-600">{product.stockQuantity} units left</p>
                                           </div>
                                        </div>
-                                     ))
-                                   ) : (
-                                     <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-                                        <div>
-                                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Default Batch</p>
-                                           <p className="text-xs font-bold text-slate-500">Legacy Stock</p>
-                                        </div>
-                                        <div className="text-right">
-                                           <p className="text-sm font-black text-slate-900">৳{product.purchasePrice}</p>
-                                           <p className="text-[10px] font-bold text-blue-600">{product.stockQuantity} units left</p>
-                                        </div>
-                                     </div>
-                                   )}
-                                </div>
-                             </div>
-                          </td>
-                        </motion.tr>
-                      )}
-                    </AnimatePresence>
-                  </React.Fragment>
-                ))
+                                     )}
+                                  </div>
+                               </div>
+                            </td>
+                          </motion.tr>
+                        )}
+                      </AnimatePresence>
+                    </React.Fragment>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={5} className="px-6 py-20 text-center">

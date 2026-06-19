@@ -557,6 +557,11 @@ export const CustomersPage = () => {
                             <p className="text-[10px] font-black text-slate-700 leading-none">
                                {tx.type === 'payment' ? "Payment Received" : `Invoice #QT-${tx.id.slice(-6)}`}
                             </p>
+                            {tx.type !== 'payment' && tx.items && Array.isArray(tx.items) && tx.items.length > 0 && (
+                              <p className="text-[10px] text-slate-600 font-semibold mt-1">
+                                {tx.items.map((it: any) => `${it.name || 'Product'} (${it.quantity || 1} pc)`).join(', ')}
+                              </p>
+                            )}
                             <p className="text-[8px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">
                                {new Date(tx.date).toLocaleDateString()}
                             </p>
@@ -752,6 +757,11 @@ export const CustomersPage = () => {
                           <p className="text-[10px] font-black text-slate-900 leading-tight">
                             {tx.type === 'payment' ? "Payment Received" : `Invoice #INV-${tx.id.slice(-6)}`}
                           </p>
+                          {tx.type !== 'payment' && tx.items && Array.isArray(tx.items) && tx.items.length > 0 && (
+                            <p className="text-[10px] text-slate-600 font-semibold mt-1">
+                              {tx.items.map((it: any) => `${it.name || 'Product'} (${it.quantity || 1} pc)`).join(', ')}
+                            </p>
+                          )}
                           <p className="text-[9px] font-bold text-slate-400 mt-0.5">
                             {new Date(tx.date).toLocaleDateString()} at {new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>

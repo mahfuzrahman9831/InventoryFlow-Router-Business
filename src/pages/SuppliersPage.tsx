@@ -469,11 +469,31 @@ export const SuppliersPage = () => {
                 }
               ]).filter((b: any) => (Number(b.quantity) || 0) > 0);
 
+              const targetPrice = Number(item.purchasePrice);
+              const matchingBatchIdx = existingBatches.findIndex((b: any) => 
+                Number(b.purchasePrice ?? b.price) === targetPrice
+              );
+
+              let updatedBatches: any[];
+              if (matchingBatchIdx > -1) {
+                updatedBatches = existingBatches.map((b: any, idx: number) => {
+                  if (idx === matchingBatchIdx) {
+                    return {
+                      ...b,
+                      quantity: Number(b.quantity) + Number(item.quantity)
+                    };
+                  }
+                  return b;
+                });
+              } else {
+                updatedBatches = [...existingBatches, newBatch];
+              }
+
               batch.update(productRef, {
                 stockQuantity: (Number(currentProd.stockQuantity) || 0) + Number(item.quantity),
                 purchasePrice: Number(item.purchasePrice), // Latest price as default
                 supplierId: selectedSupplier.id,
-                batches: [...existingBatches, newBatch]
+                batches: updatedBatches
               });
             }
           } else {
